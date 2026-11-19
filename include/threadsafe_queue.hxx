@@ -32,6 +32,7 @@ class threadsafe_queue {
         void push(T);
         std::shared_ptr<T> try_pop();
         std::shared_ptr<T> wait_and_pop();
+        bool empty();
         
 
 
@@ -43,8 +44,9 @@ class threadsafe_queue {
 
 template <typename T>
 void threadsafe_queue<T>::push(T new_value) {
-    std::unique_lock<std::mutex> lock{m_mutex};
+   
     {
+        std::unique_lock<std::mutex> lock{m_mutex};
         m_data_queue.push(std::move(new_value));
     }
     // the lock on m_mutex will immediately be released after the above closing curly brace
@@ -84,6 +86,13 @@ std::shared_ptr<T> threadsafe_queue<T>::try_pop() {
     }
 
     std::shared_ptr<T> target_data {std::make_shared<T>(std::move(m_data_queue.front()))};
+    m_data_queue.pop();
     return target_data;
+}
+
+template <typename T>
+bool threadsafe_queue<T>::empty() {
+    std::lock_guard<std::mutex> lock{m_mutex};
+    return m_data_queue.empty();
 }
 #endif
