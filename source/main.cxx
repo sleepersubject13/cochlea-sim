@@ -1,16 +1,10 @@
 #include <SFML/Graphics.hpp>
 
-#include "window_event_handler.hpp"
-
 int main() {
 
-    sf::RenderWindow app {sf::VideoMode({1000, 600}), "Cochlea Simulator"};
+    sf::Window main_window {sf::VideoMode{sf::Vector2u{1'000, 800}}, "Cochlea Sim", sf::Style::Default};
 
-    app.setFramerateLimit(60);
+    while (main_window.isOpen()) {
 
-    WindowEventHandler event_handler {app};
-
-    while (app.isOpen()) {
-        app.handleEvents(event_handler);
     }
 }
