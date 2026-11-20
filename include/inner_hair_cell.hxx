@@ -35,7 +35,7 @@ class InnerHairCell {
         const Vec2 m_position;
         const Vec2 m_size;
 
-        std::int_fast64_t m_viral_copies {};
+        int m_viral_copies {};
         // 0.0 (damaged/deaf) -> 1.0 (fully restored)
         float m_otoferlin_level {.0f};
         // -1.0 to +1.0 mechanical bend from sound wave

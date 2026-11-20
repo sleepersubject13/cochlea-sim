@@ -14,7 +14,8 @@ bool InnerHairCell::try_absorb_particle(Vec2 particle_pos) {
     bool inside_y = (particle_pos.y >= m_position.y) && (particle_pos.y <= m_position.y + m_size.y);
 
     if (!inside_x || !inside_y) {
-        return false; // Particle missed this cell; zero lock overhead!
+        // Particle missed this cell; zero lock overhead!
+        return false;
     }
 
     // Particle hit the cell membrane: acquire exclusive lock to absorb viral vector
