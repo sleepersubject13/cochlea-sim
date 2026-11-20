@@ -38,7 +38,7 @@ struct AdenoAssociatedVirus {
 struct SynapticFireEvent {
     // This identifies which Inner Hair Cell fired (for example, cell 0 through 9 along the cochlea).
     // The auditory nerve thread uses this index to know which nerve fiber should light u
-    size_t cell_index {};
+    std::size_t cell_index {};
     // The lack/abbsence of this protein in the inner hair cells results in the inability
     // of said cells to successfully conduct an electrical signal from the
     // sound waves passing over them. Said signal is never passed onto the auditory
@@ -50,7 +50,7 @@ struct SynapticFireEvent {
 struct NervePulse {
     // Tells the SFML renderer which vertical nerve fiber line to draw the glowing
     // pulse on (matching the hair cell that fired)
-    size_t cell_index {};
+    std::size_t cell_index {};
     // A normalized percentage (0.0f to 1.0f) tracking how far the pulse has
     // traveled down the nerve fiber:
     //

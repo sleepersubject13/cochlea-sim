@@ -26,6 +26,8 @@ FetchContent_MakeAvailable(SFML)
 
 add_executable(
     cochlea-sim
+    source/inner_hair_cell.cxx
+    source/cochlea_engine.cxx
     source/window_event_handler.cxx
     source/main.cxx
 )

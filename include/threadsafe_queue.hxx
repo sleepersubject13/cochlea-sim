@@ -6,6 +6,7 @@
 #include <memory>
 #include <utility>
 #include <condition_variable>
+#include <stop_token>
 
 template <typename T>
 class threadsafe_queue {
@@ -14,12 +15,12 @@ class threadsafe_queue {
         threadsafe_queue() = default;
         // Since the following:
         //
-        // std::mutex and std::condition_variable are strictly non-movable and
+        // std::mutex and std::condition_variable_any are strictly non-movable and
         // non-copyable, implicitly, this class becomes non-movable and non-copyable
         // as well.
         //
-        // Here, we implicitly delete the copy constructor, copy assignment operator,
-        // Move constructor, and move assignnment operator
+        // Here, we explicitly delete the copy constructor, copy assignment operator,
+        // Move constructor, and move assignment operator
         threadsafe_queue(const threadsafe_queue& rhs) = delete;
         // Copy-assignment operator
         threadsafe_queue& operator=(const threadsafe_queue&) = delete;
@@ -31,15 +32,15 @@ class threadsafe_queue {
         // --> Member functions
         void push(T);
         std::shared_ptr<T> try_pop();
-        std::shared_ptr<T> wait_and_pop();
-        bool empty();
+        std::shared_ptr<T> wait_and_pop(std::stop_token stoken);
+        bool empty() const;
         
 
 
     private:
         std::queue<T> m_data_queue;
-        std::mutex m_mutex;
-        std::condition_variable m_data_condition;
+        mutable std::mutex m_mutex;
+        std::condition_variable_any m_data_condition;
 };
 
 template <typename T>
@@ -56,25 +57,30 @@ void threadsafe_queue<T>::push(T new_value) {
 }
 
 template <typename T>
-std::shared_ptr<T> threadsafe_queue<T>::wait_and_pop() {
+std::shared_ptr<T> threadsafe_queue<T>::wait_and_pop(std::stop_token stoken) {
     // We use a std::unique_lock<T> here because we do not want this
-    // RAAI class template to exclusively own the mutex passed to its
+    // RAII class template to exclusively own the mutex passed to its
     // constructor. The code that follows will need to be able to lock
     // and unlock the mutex under different circumstances
     std::unique_lock<std::mutex> lock{m_mutex};
+
     // At this point, having acquired the aforementioned lock, we read from
-    // m_data_queue to check whether theres any data to process. If there isn't
-    // wait() releases the acquired lock, puts the thread to sleep allowing
-    // other threads to be able to acquire it.
-    m_data_condition.wait(lock, [this] () -> bool {
+    // m_data_queue to check whether there's any data to process. If there isn't,
+    // wait() releases the acquired lock and puts the thread to sleep until either
+    // new data arrives OR stoken receives a stop request.
+    bool has_data = m_data_condition.wait(lock, stoken, [this]() -> bool {
         return !m_data_queue.empty();
     });
+
+    // If wait() returned false, it woke up due to stoken.stop_requested() while empty
+    if (!has_data) {
+        return nullptr;
+    }
+
     // If there is indeed data, wait returns still holding a lock on m_mutex
     std::shared_ptr<T> target_data {std::make_shared<T>(std::move(m_data_queue.front()))};
     m_data_queue.pop();
     return target_data;
-
-
 }
 
 template <typename T>
@@ -91,8 +97,9 @@ std::shared_ptr<T> threadsafe_queue<T>::try_pop() {
 }
 
 template <typename T>
-bool threadsafe_queue<T>::empty() {
+bool threadsafe_queue<T>::empty() const {
     std::lock_guard<std::mutex> lock{m_mutex};
     return m_data_queue.empty();
 }
+
 #endif
