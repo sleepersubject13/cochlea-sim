@@ -30,6 +30,9 @@ public:
     // 2. DOUBLE-BUFFERED RENDER SNAPSHOT (Parallel Shared Read for 60 FPS SFML)
     RenderSnapshot get_render_snapshot() const;
 
+    static inline const unsigned k_window_width {1'100};
+    static inline const unsigned k_window_height {680};
+
 private:
     // Background Worker Loops (Run on dedicated std::jthreads)
     void diffusion_worker_loop(std::stop_token stoken);
@@ -70,6 +73,7 @@ private:
     std::jthread m_diffusion_thread;
     std::jthread m_biology_thread;
     std::jthread m_nerve_thread;
+
 };
 
 #endif
