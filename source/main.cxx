@@ -1,4 +1,6 @@
 #include "cochlea_engine.hxx"
+#include "window_event_handler.hpp"
+
 
 #include <SFML/Graphics.hpp>
 #include <algorithm>
@@ -19,12 +21,10 @@ sf::Color lerp_color(sf::Color a, sf::Color b, float t) {
 }
 
 int main() {
-    constexpr unsigned int kWindowWidth{1100};
-    constexpr unsigned int kWindowHeight{680};
 
     // 1. Create SFML 3.0 RenderWindow
     sf::RenderWindow window(
-        sf::VideoMode({kWindowWidth, kWindowHeight}),
+        sf::VideoMode({CochleaEngine::k_window_width, CochleaEngine::k_window_height}),
         "CochleaSim - AAV-OTOF Inner Ear Gene Therapy Simulator"
     );
     window.setFramerateLimit(60);
@@ -39,10 +39,10 @@ int main() {
     }
 
     // 3. Start the Multi-Threaded Cochlea Biology Engine
-    CochleaEngine engine(static_cast<float>(kWindowWidth), static_cast<float>(kWindowHeight));
+    CochleaEngine engine(static_cast<float>(CochleaEngine::k_window_width), static_cast<float>(CochleaEngine::k_window_height));
 
     // Static anatomical shapes
-    sf::RectangleShape chamber_box({static_cast<float>(kWindowWidth) - 110.0f, 285.0f});
+    sf::RectangleShape chamber_box({static_cast<float>(CochleaEngine::k_window_width) - 110.0f, 285.0f});
     chamber_box.setPosition({70.0f, 105.0f});
     chamber_box.setFillColor(sf::Color(18, 28, 44));
     chamber_box.setOutlineThickness(2.0f);
@@ -53,39 +53,28 @@ int main() {
     round_window.setPosition({63.0f, 170.0f});
     round_window.setFillColor(sf::Color(0, 220, 235));
 
+
     // 4. Main 60 FPS Render & Input Loop
     while (window.isOpen()) {
-        // --- A. Poll SFML 3.0 Events  ---
-        while (const std::optional<sf::Event> event = window.pollEvent()) {
-            if (event->is<sf::Event::Closed>()) {
-                window.close();
-            }
-            else if (const auto* mouse = event->getIf<sf::Event::MouseButtonPressed>()) {
-                if (mouse->button == sf::Mouse::Button::Left) {
-                    float click_x = static_cast<float>(mouse->position.x);
-                    float click_y = static_cast<float>(mouse->position.y);
 
-                    // Inject AAV-OTOF viral vectors inside the fluid chamber
-                    if (click_x >= 70.0f && click_x <= kWindowWidth - 45.0f &&
-                        click_y >= 110.0f && click_y <= 380.0f) {
-                        engine.inject_viral_dose(Vec2{click_x, click_y}, 250);
-                    }
-                }
-            }
-            else if (const auto* key = event->getIf<sf::Event::KeyPressed>()) {
-                if (key->code == sf::Keyboard::Key::Space) {
-                    // Spacebar injects a standard dose directly through the Round Window Membrane
-                    engine.inject_viral_dose(Vec2{82.0f, 245.0f}, 250);
-                } else if (key->code == sf::Keyboard::Key::Up) {
-                    engine.adjust_sound_amplitude(0.10f);
-                } else if (key->code == sf::Keyboard::Key::Down) {
-                    engine.adjust_sound_amplitude(-0.10f);
-                } else if (key->code == sf::Keyboard::Key::R) {
-                    engine.reset_simulation();
-                }
-            }
-        }
-
+        // --- A. Register the poll events to be handled.
+        // SFML 3.0 says we can pass in a functor to `window.handleEvents`, with overloaded function-call operators,
+        // each handling the particular kind of sf::Event we want. As such, we do not have to implicity write code like:
+        //
+        // if (const auto* key_pressed = event->get_if<sf::Event::KeyPressed>()) {
+        //  ...
+        // }
+        //
+        // instead, we can have something like:
+        // ...
+        // void operator()(const sf::Event::KeyPressed& key_pressed) {
+        // if (key_pressed == sf::KeyBoard::Key::Up) {
+        // ...
+        //  }
+        // }
+        // ...
+        window.handleEvents(WindowEventHandler{window, engine});
+       
         // --- B. Grab Double-Buffered Snapshot (Zero Physics Stutter) ---
         RenderSnapshot snap {engine.get_render_snapshot()};
 
@@ -101,7 +90,7 @@ int main() {
         sf::VertexArray sound_wave(sf::PrimitiveType::LineStrip, kWavePoints);
         for (std::size_t i {}; i < kWavePoints; ++i) {
             float t {static_cast<float>(i) / static_cast<float>(kWavePoints - 1)};
-            float x {80.0f + t * (kWindowWidth - 130.0f)};
+            float x {80.0f + t * (CochleaEngine::k_window_width - 130.0f)};
             float y {155.0f + std::sin(snap.wave_phase - t * 12.0f) * (32.0f * snap.sound_amplitude)};
             sound_wave[i].position = {x, y};
             sound_wave[i].color = sf::Color(120, 190, 255, 200);
@@ -123,7 +112,7 @@ int main() {
             sf::VertexArray nerve_line(sf::PrimitiveType::Lines, 2);
             nerve_line[0].position = {center_x, base_y};
             nerve_line[0].color    = sf::Color(70, 90, 115);
-            nerve_line[1].position = {center_x, static_cast<float>(kWindowHeight) - 35.0f};
+            nerve_line[1].position = {center_x, static_cast<float>(CochleaEngine::k_window_height) - 35.0f};
             nerve_line[1].color    = sf::Color(40, 55, 75);
             window.draw(nerve_line);
 
@@ -155,7 +144,7 @@ int main() {
             const auto& cell = snap.cells[pulse.cell_index];
             float center_x = cell.position.x + cell.size.x * 0.5f;
             float start_y  = cell.position.y + cell.size.y;
-            float end_y    = static_cast<float>(kWindowHeight) - 35.0f;
+            float end_y    = static_cast<float>(CochleaEngine::k_window_height) - 35.0f;
             float pulse_y  = start_y + pulse.progress * (end_y - start_y);
 
             sf::CircleShape spark(7.0f);
