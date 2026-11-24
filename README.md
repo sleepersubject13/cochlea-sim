@@ -30,7 +30,7 @@ Read more about this incredible, groundbreaking research [here](https://news.ki.
 
 > For the graphics, this project uses SFML. However, you do not need to explicitly download or build the library by yourself. The first time you run `cmake -B build` as explained below, CMake, using [FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html) (please refer to `/CMakeLists.txt` inside the project's base directory) will take care of this for you. `cmake -B build` might take some time the first time, but subsequent builds will be much faster
 
-### Running
+### Building and Running
 1. After making sure you have satisfied the aforementioned requirements, clone this repository.
 2. Change directory into its base directory:
 
