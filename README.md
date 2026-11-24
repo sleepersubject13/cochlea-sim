@@ -26,6 +26,10 @@ Read more about this incredible, groundbreaking research [here](https://news.ki.
 
 > For the C++ compiler, I warmly recommend you get either GNU or Clang becuase these have support for ThreadSanitizer (TSan) which, can be used to detect data races in this code.
 
+3. [SFML](https://www.sfml-dev.org/)
+
+> For the graphics, this project uses SFML. However, you do not need to explicitly download or build the library by yourself. The first time you run `cmake -B build` as explained below, CMake, using [FetchContent](https://cmake.org/cmake/help/latest/module/FetchContent.html) (please refer to `/CMakeLists.txt` inside the project's base directory) will take care of this for you. `cmake -B build` might take some time the first time, but subsequent builds will be much faster
+
 ### Running
 1. After making sure you have satisfied the aforementioned requirements, clone this repository.
 2. Change directory into its base directory:
@@ -43,7 +47,7 @@ Read more about this incredible, groundbreaking research [here](https://news.ki.
     ```bash
     $ cmake --build build
     ```
-5. If successful, an executable will be available inside the newly generated `build` directory: `cochlea-sim.exe` if you're on Windows, `cochlea-sim` if on Unix (Linux/Mac).
+5. If successful, an executable file will be available inside the newly generated `build` directory: `cochlea-sim.exe` if you're on Windows, `cochlea-sim` if on Unix (Linux/Mac).
 
 > Of course, if you're not happy with the executable name, please feel free to edit the `CMakeLists.txt` file and change all occurences of `cochlea-sim` with your desired name.
 
