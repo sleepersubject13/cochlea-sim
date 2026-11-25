@@ -3,12 +3,14 @@
 
 
 #include <SFML/Graphics.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <format>
 
 // Helper to smoothly blend two SFML colors based on t in [0.0, 1.0]
 sf::Color lerp_color(sf::Color a, sf::Color b, float t) {
@@ -165,15 +167,20 @@ int main() {
         // 6. Draw Clinical Telemetry HUD
         if (font_loaded) {
             std::ostringstream hud_stream;
-            hud_stream << std::fixed << std::setprecision(1)
-                       << "CochleaSim | AAV-OTOF Gene Therapy Simulation\n"
-                       << "Active AAV Vectors: " << snap.particle_positions.size()
-                       << "   |   Synaptic Spikes: " << snap.total_spikes
-                       << "   |   Hearing Threshold: " << snap.estimated_hearing_db << " dB "
-                       << (snap.estimated_hearing_db <= 45.0f ? "[RESTORED]" : "[IMPAIRED]") << "\n"
-                       << "Controls: [Left-Click / Space] Inject AAV-OTOF Dose   "
-                       << "[Up/Down] Sound Volume (" << static_cast<int>(snap.sound_amplitude * 100.0f) << "%)   "
-                       << "[R] Reset";
+            hud_stream << 
+                       std::format("CochleaSim | AAV-OTOF Gene Therapy Simulation\n")
+                       <<
+                       std::format("Active AAV Vectors: {}", snap.particle_positions.size())
+                       << 
+                       std::format("   |   Synaptic Spikes: {}", snap.total_spikes)
+                       << 
+                       std::format("   |   Hearing Threshold: {:.1f} dB {}\n", snap.estimated_hearing_db, (snap.estimated_hearing_db <= 45.0f ? "[RESTORED]" : "[IMPAIRED]"))
+                       << 
+                       std::format("Controls: [Left-Click / Space] Inject AAV-OTOF Dose   ")
+                       <<
+                       std::format("[Up/Down] Sound Volume ({}%) ", static_cast<int>(snap.sound_amplitude * 100.0f))
+                       <<
+                       std::format("[R] Reset");
 
             sf::Text hud_text(font, hud_stream.str(), 15);
             hud_text.setPosition({70.0f, 22.0f});
