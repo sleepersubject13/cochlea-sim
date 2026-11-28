@@ -238,8 +238,8 @@ void CochleaEngine::rebuild_snapshot() {
 }
 
 std::future<AudiogramReport> CochleaEngine::run_audiogram_async() {
-    std::packaged_task<AudiogramReport()> task{[this]() -> AudiogramReport {
-        // Here, we simulate a 1.5 second multi-frequency pure-tone clinical sweep
+    std::packaged_task<AudiogramReport()> task([this]() -> AudiogramReport {
+        // Here, we simulate a 1.5second multi-frequency pure-tone clinical sweep
         std::this_thread::sleep_for(std::chrono::milliseconds(1500));
 
         float sum_otoferlin{};
@@ -264,7 +264,7 @@ std::future<AudiogramReport> CochleaEngine::run_audiogram_async() {
         }
 
         return AudiogramReport{avg_pct, db_threshold, restored_cells, std::move(status)};
-    }};
+    });
 
     std::future<AudiogramReport> future_ticket{task.get_future()};
 
