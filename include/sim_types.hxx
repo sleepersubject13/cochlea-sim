@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <cstddef>
+#include <string>
 #include <cinttypes>
 
 // NOTE: We will follow the so-called clean architecture in this implementation.
