@@ -12,6 +12,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <atomic>
+#include <future>
 
 class CochleaEngine {
 public:
@@ -26,9 +27,13 @@ public:
     void inject_viral_dose(Vec2 injection_point, int count = 250);
     void adjust_sound_amplitude(float delta);
     void reset_simulation();
+    
 
     // 2. DOUBLE-BUFFERED RENDER SNAPSHOT (Parallel Shared Read for 60 FPS SFML)
     RenderSnapshot get_render_snapshot() const;
+
+    // 3. ASYNCHRONOUS DIAGNOSTIC
+    std::future<AudiogramReport> run_audiogram_async();
 
     static inline const unsigned k_window_width {1'100};
     static inline const unsigned k_window_height {680};
@@ -73,6 +78,7 @@ private:
     std::jthread m_diffusion_thread;
     std::jthread m_biology_thread;
     std::jthread m_nerve_thread;
+    std::jthread m_diagnostic_thread;
 
 };
 

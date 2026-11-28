@@ -103,4 +103,14 @@ struct RenderSnapshot {
     float estimated_hearing_db{100.0f};
 };
 
+// Ab audiogram report. Returned when a userwants to calculate the clinical audiogram
+// diagnostic by pressing 'T' on their keyboard (T= Test)
+struct AudiogramReport {
+    float avg_otoferlin_pct{0.0f};
+    float pure_tone_threshold_db{100.0f};
+    int restored_cell_count{};
+    std::string clinical_status{"Untreated"};
+};
+
+
 #endif

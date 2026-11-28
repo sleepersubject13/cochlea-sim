@@ -1,6 +1,7 @@
 #include "cochlea_engine.hxx"
 #include <random>
 #include <chrono>
+#include <future>
 #include <algorithm>
 #include <cmath>
 
@@ -235,3 +236,42 @@ void CochleaEngine::rebuild_snapshot() {
     std::unique_lock<std::shared_mutex> snap_lock{m_snapshot_mutex};
     m_latest_snapshot = std::move(next_snapshot);
 }
+
+std::future<AudiogramReport> CochleaEngine::run_audiogram_async() {
+    std::packaged_task<AudiogramReport()> task{[this]() -> AudiogramReport {
+        // Here, we simulate a 1.5 second multi-frequency pure-tone clinical sweep
+        std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+
+        float sum_otoferlin{};
+        int restored_cells{};
+
+        for (const auto& cell : m_hair_cells) {
+            HairCellVisual state = cell->get_visual_state();
+            sum_otoferlin += state.otoferlin_level;
+            if (state.otoferlin_level >= 0.50f) {
+                ++restored_cells;
+            }
+        }
+
+        float avg_pct {m_hair_cells.empty() ? 0.0f : (sum_otoferlin / m_hair_cells.size()) * 100.0f};
+        float db_threshold {100.0f - (avg_pct * 0.80f)};
+
+        std::string status = "Profound Loss (OTOF Deficient)";
+        if (db_threshold <= 30.0f) {
+            status = "Normal Hearing Restored";
+        } else if (db_threshold <= 65.0f) {
+            status = "Moderate Recovery (Partial Expression)";
+        }
+
+        return AudiogramReport{avg_pct, db_threshold, restored_cells, std::move(status)};
+    }};
+
+    std::future<AudiogramReport> future_ticket{task.get_future()};
+
+    m_diagnostic_thread = std::jthread(std::move(task));
+
+    return future_ticket;
+}
+
+
+
